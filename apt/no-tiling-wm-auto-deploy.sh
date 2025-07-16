@@ -15,12 +15,11 @@ OBSIDIAN_VERSION="1.8.10"
 OBSIDIAN_DEB="obsidian_${OBSIDIAN_VERSION}_amd64.deb"
 WAVETERM_VERSION="0.11.2"
 WAVETERM_DEB="waveterm-linux-amd64-${WAVETERM_VERSION}.deb"
-RIPGREP_VERSION="14.1.1"
-RIPGREP_DEB="ripgrep_${RIPGREP_VERSION}-1_amd64.deb"
 TOOLS_URL="https://raw.githubusercontent.com/fir3l1ght/dotfiles/refs/heads/main/tools.list"
 TMUX_CONF_URL="https://raw.githubusercontent.com/fir3l1ght/dotfiles/refs/heads/main/tmux/tmux.conf"
 P10K_ZSH_URL="https://raw.githubusercontent.com/fir3l1ght/dotfiles/refs/heads/main/p10k.zsh"
 ROOT_P10K_ZSH_URL="https://raw.githubusercontent.com/fir3l1ght/dotfiles/refs/heads/main/Root/p10k.zsh"
+ZSHRC_URL="https://raw.githubusercontent.com/fir3l1ght/dotfiles/refs/heads/main/zshrc"
 regular_user=$(users | cut -d' ' -f1)
 
 # Change directory to tmp
@@ -80,17 +79,18 @@ su $regular_user -c "git clone --depth=1 https://github.com/romkatv/powerlevel10
 su $regular_user -c "wget -qO /home/${regular_user}/.p10k.zsh ${P10K_ZSH_URL}"
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k || { echo "root: Error while cloning p10k"; exit 1; }
 wget -qO /root/.p10k.zsh ${ROOT_P10K_ZSH_URL}
-# zshrc symlink for root
+
+# Download .zshrc and create symlink for root
+su $regular_user -c "wget -qO /home/${regular_user}/.zshrc ${ZSHRC_URL}"
 if [ ! -L /root/.zshrc ]; then
+    rm /root/.zshrc
     ln -s /home/${regular_user}/.zshrc /root/.zshrc
 fi
 
 # Install Tmux & TPM
-su $regular_user -c "wget -qO /home/${regular_user}/.config/.tmux/.tmux.conf ${TMUX_CONF_URL}"
-su $regular_user -c "tmux source /home/${regular_user}/.tmux/.tmux.conf"
+su $regular_user -c "wget -qO /home/${regular_user}/.tmux.conf ${TMUX_CONF_URL}"
 su $regular_user -c "git clone https://github.com/tmux-plugins/tpm /home/${regular_user}/.tmux/plugins/tpm || { echo -e '${regular_user}: Error while cloning tpm'; exit 1; }"
-wget -qO /root/.config/.tmux/.tmux.conf ${TMUX_CONF_URL}
-tmux source /root/.tmux/.tmux.conf
+wget -qO /root/.tmux.conf ${TMUX_CONF_URL}
 git clone https://github.com/tmux-plugins/tpm /root/.tmux/plugins/tpm || { echo -e 'root: Error while cloning tpm'; exit 1; }
 echo -e '[Tmux & TPM]\n'
 echo -e '1. Open Tmux -> tmux\n'
@@ -104,14 +104,9 @@ rm -rf nvim-linux-x86_64.tar.gz
 
 # Install Hack Nerd Font
 curl -OL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz
-mkdir /usr/share/fonts/hackNerdFont
-tar -C /usr/share/fonts/hackNerdFont -xzf Hack.tar.xz
+mkdir /usr/share/fonts/hnf
+tar -C /usr/share/fonts/hnf -xJf Hack.tar.xz
 rm -rf Hack.tar.xz
-
-# Install ripgrep (NvChad: for grep searching with Telescope)
-curl -LO "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/${RIPGREP_DEB}"
-apt install ./${RIPGREP_DEB} -y
-rm ${RIPGREP_DEB}
 
 # Install NvChad
 su $regular_user -c "git clone https://github.com/NvChad/starter /home/${regular_user}/.config/nvim || { echo -e '${regular_user}: Error while cloning NvChad'; exit 1; }"
@@ -128,10 +123,10 @@ rm -rf /root/.config/nvim/.git
 # Install FZF
 su $regular_user -c "git clone --depth 1 https://github.com/junegunn/fzf.git /home/${regular_user}/.fzf || { echo -e '${regular_user}: Error while cloning fzf'; exit 1; }"
 chmod +x /home/${regular_user}/.fzf/install
-su $regular_user -c "/home/${regular_user}/.fzf/install || { echo -e '${regular_user}: Error while installing fzf'; exit 1; }"
+su $regular_user -c "/home/${regular_user}/.fzf/install --key-bindings --completion --update-rc || { echo -e '${regular_user}: Error while installing fzf'; exit 1; }"
 git clone --depth 1 https://github.com/junegunn/fzf.git /root/.fzf || { echo -e 'root: Error while cloning fzf'; exit 1; }
 chmod +x /root/.fzf/install
-/root/.fzf/install || { echo -e 'root: Error while installing fzf'; exit 1; }
+/root/.fzf/install --key-bindings --completion --update-rc || { echo -e 'root: Error while installing fzf'; exit 1; }
 
 # Install KASM?
 #su $regular_user -c "curl -LO https://kasm-static-content.s3.amazonaws.com/kasm_release_1.17.0.bbc15c.tar.gz"
@@ -147,13 +142,6 @@ source /root/.config/envman/PATH.env
 # Install Postman and/or Posting.sh?
 #pipx install posting
 #mkdir myrequests && cd myrequests
-
-# TODO: Edit .zshrc and check if other dotfiles are needed
-# TODO: Download .zshrc as regular user and create a symlink for root
-# TODO: Download .p10k.zsh as regular user and see if necessary to replicate for root
-# TODO: Check if necessary to replicate NvChad configuration for root
-# TODO: Test and upload auto_deploy.sh and tools.list to GitHub (public)
-# TODO: Make updated dotfiles public
 
 # ¿TODO?: Install LM Studio and connect to Wave Terminal
 
